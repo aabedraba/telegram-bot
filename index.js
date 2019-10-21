@@ -2,24 +2,31 @@ const TelegramBot = require('node-telegram-bot-api');
 const fs = require('fs');
 const token = 'deleted:deleted';
 const bot = new TelegramBot(token, { polling: true });
+
 let rawdata = fs.readFileSync('players.json');
 let players = JSON.parse(rawdata);
 
-bot.onText(/\/test/, (msg) => {
-    console.log(players);
-})
+function writeToJSON(){
+    const jsonificado = JSON.stringify(players);
+    fs.writeFile("players.json", jsonificado);
+}
 
 function sort(updatedUser) {
-    console.log(updatedUser);
+    const updatedPlayerDate = new Date(updatedUser.date);
     let updated = false;
     for (let index = 0; index < players.length; index++) {
-        if (updatedUser[0].date <= players[index].date)
-            players.splice(index, 0, updatedUser[0]);
-        updated = true;
-        break;
+        const checkedPlayerDate = new Date(players[index].date);
+        let dayDifference = updatedPlayerDate - checkedPlayerDate;
+        if ( dayDifference <= 0 ){
+            players.splice(index, 0, updatedUser);
+            updated = true;
+            break;
+        }
     }
     if (!updated)
-        players.push(updatedUser[0]);
+        players.push(updatedUser);
+        
+    writeToJSON();
 }
 
 bot.onText(/\/change_date_to/, (msg) => {
@@ -36,7 +43,7 @@ bot.onText(/\/change_date_to/, (msg) => {
                 players[index].date = new Date(newDate);
                 bot.sendMessage(msg.chat.id, msg.from.first_name + " changed date");
                 const updatedUser = players.splice(index, 1);
-                sort(updatedUser);
+                sort(updatedUser[0]);
                 break;
             }
         }
@@ -51,8 +58,9 @@ bot.onText(/\/list_Judaspers/, (msg) => {
     message += "---------------\n";
     const currentDate = new Date();
     for (let i = 0; i < players.length; i++) {
-        var timeDiff = Math.abs(currentDate.getTime() - players[i].date.getTime());
-        var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        const playerDate = new Date(players[i].date);
+        var timeDiff = Math.abs(currentDate.getTime() - playerDate.getTime());
+        var diffDays = Math.floor(timeDiff / (1000 * 3600 * 24));
         message += players[i].name + " " + diffDays + " days\n";
     }
     bot.sendMessage(msg.chat.id, message);
@@ -66,6 +74,7 @@ bot.onText(/\/restart_me/, (msg) => {
             players.splice(i, 1);
             const updatedUser = { id: msg.chat.id, name: msg.from.first_name, date: new Date() };
             players.push(updatedUser);
+            writeToJSON(updatedUser);
             bot.sendMessage(msg.chat.id, msg.from.first_name + " has restarted counter.");
             found = true;
             break;
@@ -93,6 +102,7 @@ bot.onText(/\/join/, (msg) => {
 
     if (!found) {
         players.push(newUser);
+        writeToJSON();
         bot.sendMessage(msg.chat.id, "Added " + msg.from.first_name);
     } else {
         bot.sendMessage(msg.chat.id, "You're already playing... List players with /list_Judaspers");
