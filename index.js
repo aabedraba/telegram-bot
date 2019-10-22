@@ -38,9 +38,9 @@ bot.onText(/\/change_date_to (.+)/, (msg, match) => {
                     name: msg.from.first_name,
                     date: newDate.getTime()
                 });
-                bot.sendMessage(msg.from.id, "Date of " + msg.from.first_name + " has been updated.");
+                bot.sendMessage(msg.chat.id, "Date of " + msg.from.first_name + " has been updated.");
             } else
-                bot.sendMessage(msg.from.id, msg.from.first_name + ", you're not playing. If you want to join, send /join.");
+                bot.sendMessage(msg.chat.id, msg.from.first_name + ", you're not playing. If you want to join, send /join.");
         })
     }
 });
