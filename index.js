@@ -19,8 +19,8 @@ var firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var database = firebase.database();
 
-bot.onText(/\/change_date_to/, (msg) => {
-    let dateText = msg.text.slice(16);
+bot.onText(/\/change_date_to (.+)/, (msg, match) => {
+    let dateText = match[1];
     if (dateText.length != 10) {
         bot.sendMessage(msg.chat.id, "Enter a valid date. Example /change_date_to 2019/02/30");
     } else {
@@ -31,7 +31,7 @@ bot.onText(/\/change_date_to/, (msg) => {
                     name: msg.from.first_name,
                     date: newDate.getTime()
                 });
-                bot.sendMessage(msg.from.id, "Date of " + msg.from.fisrt_name + " has been updated.");
+                bot.sendMessage(msg.from.id, "Date of " + msg.from.first_name + " has been updated.");
             } else
                 bot.sendMessage(msg.from.id, msg.from.first_name + ", you're not playing. If you want to join, send /join.");
         })
