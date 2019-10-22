@@ -1,120 +1,91 @@
 const TelegramBot = require('node-telegram-bot-api');
-const fs = require('fs');
 const token = 'deleted:deleted';
 const bot = new TelegramBot(token, { polling: true });
 
-let rawdata = fs.readFileSync('players.json');
-let players = JSON.parse(rawdata);
+//Adding firebase support
+var firebase = require('firebase/app');
+require('firebase/database');
 
-function writeToJSON(){
-    const jsonificado = JSON.stringify(players);
-    fs.writeFile("players.json", jsonificado);
-}
+var firebaseConfig = {
+    apiKey: "***REMOVED***",
+    authDomain: "***REMOVED***",
+    databaseURL: "***REMOVED***",
+    projectId: "***REMOVED***",
+    storageBucket: "***REMOVED***.appspot.com",
+    messagingSenderId: "***REMOVED***",
+    appId: "1:***REMOVED***:web:467d2008f618539644ffb9"
+};
 
-function sort(updatedUser) {
-    const updatedPlayerDate = new Date(updatedUser.date);
-    let updated = false;
-    for (let index = 0; index < players.length; index++) {
-        const checkedPlayerDate = new Date(players[index].date);
-        let dayDifference = updatedPlayerDate - checkedPlayerDate;
-        if ( dayDifference <= 0 ){
-            players.splice(index, 0, updatedUser);
-            updated = true;
-            break;
-        }
-    }
-    if (!updated)
-        players.push(updatedUser);
-        
-    writeToJSON();
-}
+firebase.initializeApp(firebaseConfig);
+var database = firebase.database();
 
 bot.onText(/\/change_date_to/, (msg) => {
-    let newDate = msg.text.slice(16);
-    if (players.length == 0) {
-        bot.sendMessage(msg.chat.id, "There are no players.");
-    } else if (newDate.length != 10) {
+    let dateText = msg.text.slice(16);
+    if (dateText.length != 10) {
         bot.sendMessage(msg.chat.id, "Enter a valid date. Example /change_date_to 2019/02/30");
     } else {
-        let found = false;
-        for (let index = 0; index < players.length; index++) {
-            if (players[index].id === msg.from.id) {
-                found = true;
-                players[index].date = new Date(newDate);
-                bot.sendMessage(msg.chat.id, msg.from.first_name + " changed date");
-                const updatedUser = players.splice(index, 1);
-                sort(updatedUser[0]);
-                break;
-            }
-        }
-        if (!found)
-            bot.sendMessage(msg.from.id, msg.from.first_name + ", you're not playing. If you want to join, send /join.");
-    }
-})
-
-bot.onText(/\/list_Judaspers/, (msg) => {
-    let message = "---------------\n";
-    message += "List of Judaspers\n";
-    message += "---------------\n";
-    const currentDate = new Date();
-    for (let i = 0; i < players.length; i++) {
-        const playerDate = new Date(players[i].date);
-        var timeDiff = Math.abs(currentDate.getTime() - playerDate.getTime());
-        var diffDays = Math.floor(timeDiff / (1000 * 3600 * 24));
-        message += players[i].name + " " + diffDays + " days\n";
-    }
-    bot.sendMessage(msg.chat.id, message);
-})
-
-bot.onText(/\/restart_me/, (msg) => {
-    const id = msg.from.id;
-    let found = false;
-    for (let i = 0; i < players.length; i++) {
-        if (players[i].id == id) {
-            players.splice(i, 1);
-            const updatedUser = { id: msg.chat.id, name: msg.from.first_name, date: new Date() };
-            players.push(updatedUser);
-            writeToJSON(updatedUser);
-            bot.sendMessage(msg.chat.id, msg.from.first_name + " has restarted counter.");
-            found = true;
-            break;
-        }
-    }
-    if (!found) {
-        bot.sendMessage(msg.from.id, msg.from.first_name + ", you're not playing. If you want to join, send /join.");
-    }
-})
-
-bot.onText(/\/join/, (msg) => {
-    const newUser = { id: msg.from.id, name: msg.from.first_name, date: new Date() };
-    let found = false;
-    if (players.length == 0) {
-        found = false;
-    } else {
-        for (let index = 0; index < players.length; index++) {
-            if (players[index].id == msg.from.id) {
-                found = true;
-                break;
-            }
-        }
-    }
-
-
-    if (!found) {
-        players.push(newUser);
-        writeToJSON();
-        bot.sendMessage(msg.chat.id, "Added " + msg.from.first_name);
-    } else {
-        bot.sendMessage(msg.chat.id, "You're already playing... List players with /list_Judaspers");
+        let newDate = new Date(dateText);
+        database.ref('/users/' + msg.from.id).once('value').then(function (snapshot) {
+            if (snapshot.exists()) {
+                firebase.database().ref('/users/' + msg.from.id).set({
+                    name: msg.from.first_name,
+                    date: newDate.getTime()
+                });
+                bot.sendMessage(msg.from.id, "Date of " + msg.from.fisrt_name + " has been updated.");
+            } else
+                bot.sendMessage(msg.from.id, msg.from.first_name + ", you're not playing. If you want to join, send /join.");
+        })
     }
 });
 
-bot.on('message', (msg) => {
+bot.onText(/\/list_Judaspers/, (msg) => {
+    let message = "------------------------\n";
+    message += "List of Judaspers\n";
+    message += "------------------------\n";
+    const currentDate = new Date();
+    // Fetching ordered data
+    firebase.database().ref('/users/').orderByChild('date').once('value').then(function (snapshot) {
+        snapshot.forEach(function (child) {
+            let userDate = child.val().date;
+            let daysSinceLastJudas = Math.floor((currentDate.getTime() - userDate) / (1000 * 3600 * 24));
+            message += child.val().name + ' ' + daysSinceLastJudas + ' days\n';
+        })
+        bot.sendMessage(msg.chat.id, message);
+    });
+});
 
-    var Hi = "hi";
-    if (msg.text.toString().toLowerCase().indexOf(Hi) === 0) {
-        bot.sendMessage(msg.chat.id, "Hello  " + msg.from.first_name);
-        console.log(msg.from.id);
-    }
+bot.onText(/\/restart_me/, (msg) => {
+    database.ref('/users/' + msg.from.id).once('value').then(function (snapshot) {
+        if (snapshot.exists()) {
+            let newDate = new Date();
+            firebase.database().ref('/users/' + msg.from.id).set({
+                name: msg.from.first_name,
+                date: newDate.getTime()
+            });
+            bot.sendMessage(msg.from.id, "This time you can do it! Date reset.");
+        }
+        else
+            bot.sendMessage(msg.from.id, msg.from.first_name + ", you're not playing. If you want to join, send /join.");
+    })
+});
 
+bot.onText(/\/join/, (msg) => {
+    database.ref('/users/' + msg.from.id)
+        .once('value')
+        .then(function (snapshot) {
+            if (snapshot.exists())
+                bot.sendMessage(msg.chat.id, msg.chat.first_name + " is already playing.");
+            else {
+                let currentDate = new Date();
+                firebase.database().ref('/users/' + msg.from.id).set({
+                    name: msg.from.first_name,
+                    date: currentDate.getTime()
+                });
+                bot.sendMessage(msg.chat.id, "Welcome to the game " + msg.from.first_name + "!");
+            }
+        });
+});
+
+bot.on('polling_error', (error) => {
+    console.log(error);  // => 'EFATAL'
 });

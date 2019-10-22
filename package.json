@@ -1,9 +1,10 @@
 {
   "name": "wingmennoJudas",
   "version": "1.0.0",
-  "description": "",
+  "description": "TODO: configure date to be saved in JSON to secure persistency when server is down.  TODO: upload to a server (probably Raspberry Pi?).",
   "main": "index.js",
   "dependencies": {
+    "firebase": "^7.2.1",
     "node-telegram-bot-api": "^0.40.0"
   },
   "devDependencies": {},
@@ -11,5 +12,13 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aabedraba/noJudaspers.git"
+  },
+  "bugs": {
+    "url": "https://github.com/aabedraba/noJudaspers/issues"
+  },
+  "homepage": "https://github.com/aabedraba/noJudaspers#readme"
 }
