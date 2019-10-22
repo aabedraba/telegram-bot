@@ -1,6 +1,13 @@
 const TelegramBot = require('node-telegram-bot-api');
-const token = '***REMOVED***';
-const bot = new TelegramBot(token, { polling: true });
+const TOKEN = process.env.TELEGRAM_TOKEN || '***REMOVED***';
+const options = {
+    webHook: {
+        port: process.env.PORT
+    }
+};
+const url = process.env.APP_URL || 'https://wingmennoJudaspers.herokuapp.com:443';
+const bot = new TelegramBot(TOKEN, options);
+bot.setWebHook(`${url}/bot${TOKEN}`);
 
 //Adding firebase support
 var firebase = require('firebase/app');
