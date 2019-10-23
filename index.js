@@ -5,10 +5,12 @@ const options = {
     webHook: {
         port: process.env.PORT,
     }
+    // to run local node, commet webhook and uncomment polling
+    // polling: true
 };
 const url = process.env.APP_URL || '***REMOVED***';
 const bot = new TelegramBot(TOKEN, options);
-bot.setWebHook(`${url}/bot${TOKEN}`);
+bot.setWebHook(`${url}/bot${TOKEN}`); // comment when running local node
 
 //Adding firebase support
 var firebase = require('firebase/app');
@@ -76,7 +78,7 @@ bot.onText(/\/list_Judaspers/, (msg) => {
         + "List of Judaspers"
         + "\n------------------------\n";
     // Fetching ordered data
-    database.ref('/users/').orderByChild('date').once('value').then(function (snapshot) {
+    database.ref('/users/').orderByChild('date').once('value').then(snapshot => {
         snapshot.forEach(function (child) {
             let userDate = child.val().date;
             let daysSinceLastJudas = Math.floor((currentDate.getTime() - userDate) / (1000 * 3600 * 24));
