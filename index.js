@@ -6,7 +6,7 @@ const options = {
         port: process.env.PORT,
     }
 };
-const url = process.env.APP_URL || 'https://wingmennoJudaspers.herokuapp.com:443';
+const url = process.env.APP_URL || '***REMOVED***';
 const bot = new TelegramBot(TOKEN, options);
 bot.setWebHook(`${url}/bot${TOKEN}`);
 
