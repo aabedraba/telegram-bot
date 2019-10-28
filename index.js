@@ -142,7 +142,7 @@ bot.onText(/\/set_birthdate/, (msg) => {
                     if ( msg.text.length == 10 ){
                         const newBirthDate = new Date(msg.text);
                         database.ref('/users/' + msg.from.id).update({birthdate: newBirthDate.getTime()})
-                        bot.sendMessage(msg.chat.id, "Date of " + msg.from.id + " updated. Check how many days you've lived with /list_days_lived");
+                        bot.sendMessage(msg.chat.id, "Date of " + msg.from.first_name + " updated. Check how many days you've lived with /list_days_lived");
                     }
                     else{
                         bot.sendMessage(msg.chat.id, "Format is incorrect. Please start again /set_birthdate")
