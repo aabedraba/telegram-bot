@@ -169,3 +169,17 @@ bot.onText(/\/list_days_lived/, (msg) => {
         bot.sendMessage(msg.chat.id, message);
     })
 })
+
+bot.onText(/\/list_birthdates/, (msg) => {
+    let message = "------------------------\n"
+    + "Birthdays"
+    + "\n------------------------\n";
+    database.ref('/users/').once('value').then(snapshot => {
+        snapshot.forEach(user => {
+            const userBirthDate = new Date(user.val().birthdate);
+            if ( !isNaN(userBirthDate) )
+                message += user.val().name + " " + userBirthDate.toLocaleDateString("es-ES") + "\n"; 
+        })
+        bot.sendMessage(msg.chat.id, message );
+    })
+})
