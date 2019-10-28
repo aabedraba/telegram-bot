@@ -139,13 +139,14 @@ bot.onText(/\/set_birthdate/, (msg) => {
         if (exists) {
             bot.sendMessage(msg.chat.id, "Please *directly reply to this message' with your birthdate (yyyy/mm/dd)").then(response => {
                 bot.onReplyToMessage(response.chat.id, response.message_id, msg => {
-                    if ( msg.length == 10 ){
+                    if ( msg.text.length == 10 ){
                         const newBirthDate = new Date(msg.text);
                         database.ref('/users/' + msg.from.id).update({birthdate: newBirthDate.getTime()})
                         bot.sendMessage(msg.chat.id, "Date of " + msg.from.id + " updated. Check how many days you've lived with /list_days_lived");
                     }
-                    else
+                    else{
                         bot.sendMessage(msg.chat.id, "Format is incorrect. Please start again /set_birthdate")
+                    }
                 })
             })
         }
