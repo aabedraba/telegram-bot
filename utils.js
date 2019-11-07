@@ -151,8 +151,10 @@ module.exports = {
         let users = await module.exports.getUsers();
         return await database.ref('/stats/').once('value').then(snapshot => {
             snapshot.forEach(stats => {
+                const now = new Date();
+                let daysToLastJudas = Math.floor((now.getTime() - users[stats.key].date)/(1000 * 3600 * 24));
                 message += users[stats.key].name + "\n"
-                    + "  - Last Judas: " + "2" + " days ago" + "\n" //TODOOOOOOO
+                    + "  - Last Judas: " + daysToLastJudas + " days ago" + "\n"
                     + "  - Number of restarts: " + stats.val().date.length + "\n"
                     + "  - Longest no-Judas streak: " + stats.val().longestStreak + "\n"
             })
