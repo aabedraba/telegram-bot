@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "firebase": "^7.2.1",
+    "firebase-admin": "^8.7.0",
     "node-telegram-bot-api": "^0.40.0"
   },
   "devDependencies": {},
