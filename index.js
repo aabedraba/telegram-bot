@@ -2,15 +2,15 @@ const TelegramBot = require('node-telegram-bot-api');
 const TOKEN = process.env.TELEGRAM_TOKEN || '***REMOVED***';
 //Heroku config
 const options = {
-    /*  webHook: {
+    webHook: {
         port: process.env.PORT,
-    } */
+    }
     // to run local node, commet webhook and uncomment polling
-     polling: true
+    // polling: true
 };
 const url = process.env.APP_URL || '***REMOVED***';
 const bot = new TelegramBot(TOKEN, options);
-//bot.setWebHook(`${url}/bot${TOKEN}`); // comment when running local node
+bot.setWebHook(`${url}/bot${TOKEN}`); // comment when running local node
 
 var utils = require('./utils.js')
 
@@ -89,8 +89,8 @@ bot.onText(/\/set_birthdate (.+)/, (msg, match) => {
         }
         const daysToBirthday = utils.daysToBirthday(birthDate);
         let message = "Date of " + msg.from.first_name + " updated\n"
-                    + "Days to your birthday " + daysToBirthday + " days\n"
-                    + "Check how many days you've lived with /list_days_lived";
+            + "Days to your birthday " + daysToBirthday + " days\n"
+            + "Check how many days you've lived with /list_days_lived";
         bot.sendMessage(msg.chat.id, message);
     })
 });
