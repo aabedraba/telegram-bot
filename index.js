@@ -12,7 +12,7 @@ const url = process.env.APP_URL || '***REMOVED***';
 const bot = new TelegramBot(TOKEN, options);
 bot.setWebHook(`${url}/bot${TOKEN}`); // comment when running local node
 
-var utils = require('./utils.js')
+var utils = require('./lib/utils.js')
 
 //------
 bot.onText(/\/join/, (msg) => {
@@ -134,6 +134,10 @@ bot.onText(/\/global_stats/, (msg) => {
         bot.sendMessage(msg.chat.id, message);
     })
 })
+/* 
+bot.onText(/\/awake/, (msg) => {
+    
+}) */
 
 bot.on('polling_error', (error) => {
     console.log(error);  // => 'EFATAL'
