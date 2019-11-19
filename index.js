@@ -6,7 +6,7 @@ const options = {
         port: process.env.PORT,
     }
     // to run local node, commet webhook and uncomment polling
-    // polling: true
+    //polling: true
 };
 const url = process.env.APP_URL || '***REMOVED***';
 const bot = new TelegramBot(TOKEN, options);
@@ -134,10 +134,19 @@ bot.onText(/\/global_stats/, (msg) => {
         bot.sendMessage(msg.chat.id, message);
     })
 })
-/* 
+
 bot.onText(/\/awake/, (msg) => {
-    
-}) */
+    var now = new Date();
+    const hour = now.getHours() + 1 ;
+    const minutes = 30;
+    console.log(hour);
+    if ( hour > 5 && hour < 10 && minutes < 31 ){
+        bot.sendMessage(msg.chat.id, "Good morning " + msg.from.first_name);
+        utils.logAwake(msg.from.id, now);
+    } else {
+        bot.sendMessage(msg.chat.id, "You're out of the awake time range.");
+    }
+})
 
 bot.on('polling_error', (error) => {
     console.log(error);  // => 'EFATAL'
