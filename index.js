@@ -2,15 +2,15 @@ const TelegramBot = require('node-telegram-bot-api');
 const TOKEN = process.env.TELEGRAM_TOKEN || '***REMOVED***';
 //Heroku config
 const options = {
-    webHook: {
+    /* webHook: {
         port: process.env.PORT,
-    }
+    } */
     // to run local node, commet webhook and uncomment polling
-    //polling: true
+    polling: true
 };
 const url = process.env.APP_URL || '***REMOVED***';
 const bot = new TelegramBot(TOKEN, options);
-bot.setWebHook(`${url}/bot${TOKEN}`); // comment when running local node
+//bot.setWebHook(`${url}/bot${TOKEN}`); // comment when running local node
 
 var utils = require('./lib/utils.js')
 
@@ -137,15 +137,89 @@ bot.onText(/\/global_stats/, (msg) => {
 
 bot.onText(/\/awake/, (msg) => {
     var now = new Date();
-    const hour = now.getHours() + 1 ;
+    const hour = now.getHours() + 1;
     const minutes = 30;
     console.log(hour);
-    if ( hour > 5 && hour < 10 && minutes < 31 ){
+    if (hour > 5 && hour < 10 && minutes < 31) {
         bot.sendMessage(msg.chat.id, "Good morning " + msg.from.first_name);
         utils.logAwake(msg.from.id, now);
     } else {
         bot.sendMessage(msg.chat.id, "You're out of the awake time range.");
     }
+})
+
+bot.onText(/\/malloc()/, (msg) => {
+    utils.checkPointerFree(msg.from.id).then(pointerIsFree => {
+        if (pointerIsFree) {
+            bot.sendMessage(msg.chat.id, "Computation type", {
+                reply_markup: {
+                    inline_keyboard: [[
+                        {
+                            text: 'Concurrent',
+                            callback_data: 'concurrency'
+                        }, {
+                            text: 'Parallel',
+                            callback_data: 'parallelism'
+                        }
+                    ]]
+                }
+            })
+        }
+        else if (!pointerIsFree){
+            bot.sendMessage(msg.chat.id, "Eeeeeepa, you already got someone.");
+        }
+    })
+})
+
+
+bot.on('callback_query', (callback) => {
+    const msg = callback.message;
+    if (callback.data == 'concurrency') {
+        let text = {
+            reply_markup: {
+                inline_keyboard: [[
+                    {
+                        text: 'Lock',
+                        callback_data: 'lock'
+                    }, {
+                        text: 'Mutual exclusion',
+                        callback_data: 'mutual-exclusion'
+                    }
+                ]]
+            }
+        }
+        bot.sendMessage(msg.chat.id, "Concurrency type ", text);
+    }
+    if (callback.data == 'parallelism') {
+        registerPartner(msg, 'parallelism');
+    }
+    if (callback.data == 'mutual-exclusion') {
+        registerPartner(msg, 'mutual-exclusion');
+    }
+    if (callback.data == 'lock') {
+        registerPartner(msg, 'lock');
+    }
+
+})
+
+function registerPartner(msg, type){
+    bot.sendMessage(msg.chat.id, "Please **mention reply** with the name of the partner").then(payload => {
+        const replyListenerId = bot.onReplyToMessage(payload.chat.id, payload.message_id, name => {
+            bot.removeReplyListener(replyListenerId)
+            utils.registerPartner(payload.chat.id, type, name.text)
+            bot.sendMessage(msg.chat.id, name.text + " has been locked by " + payload.chat.first_name);
+        })
+    })
+}
+
+bot.onText(/\/list_partners/, (msg) => {
+    let message = "------------------------\n"
+        + "Listing partners"
+        + "\n------------------------\n";
+    utils.listPartners().then(result => {
+        message += result;
+        bot.sendMessage(msg.chat.id, message);
+    })
 })
 
 bot.on('polling_error', (error) => {
