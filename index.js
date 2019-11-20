@@ -2,15 +2,15 @@ const TelegramBot = require('node-telegram-bot-api');
 const TOKEN = process.env.TELEGRAM_TOKEN || '***REMOVED***';
 //Heroku config
 const options = {
-    webHook: {
+    /* webHook: {
         port: process.env.PORT,
-    }
+    } */
     // to run local node, commet webhook and uncomment polling
-    //polling: true
+    polling: true
 };
 const url = process.env.APP_URL || '***REMOVED***';
 const bot = new TelegramBot(TOKEN, options);
-bot.setWebHook(`${url}/bot${TOKEN}`); // comment when running local node
+//bot.setWebHook(`${url}/bot${TOKEN}`); // comment when running local node
 
 var utils = require('./lib/utils.js')
 
@@ -204,10 +204,11 @@ bot.on('callback_query', (callback) => {
 
 function registerPartner(msg, type){
     bot.sendMessage(msg.chat.id, "Please **mention reply** with the name of the partner").then(payload => {
-        const replyListenerId = bot.onReplyToMessage(payload.chat.id, payload.message_id, name => {
+        const replyListenerId = bot.onReplyToMessage(payload.chat.id, payload.message_id, msg => {
+            const name = msg.text;
             bot.removeReplyListener(replyListenerId)
-            utils.registerPartner(payload.chat.id, type, name.text)
-            bot.sendMessage(msg.from.id, name.text + " has been locked by " + payload.chat.first_name);
+            utils.registerPartner(msg.from.id, type, name);
+            bot.sendMessage(msg.chat.id, name + " has been locked by " + payload.chat.first_name);
         })
     })
 }
