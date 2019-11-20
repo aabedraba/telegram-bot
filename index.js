@@ -2,15 +2,15 @@ const TelegramBot = require('node-telegram-bot-api');
 const TOKEN = process.env.TELEGRAM_TOKEN || '***REMOVED***';
 //Heroku config
 const options = {
-    /* webHook: {
+    webHook: {
         port: process.env.PORT,
-    } */
+    }
     // to run local node, commet webhook and uncomment polling
-    polling: true
+    //polling: true
 };
 const url = process.env.APP_URL || '***REMOVED***';
 const bot = new TelegramBot(TOKEN, options);
-//bot.setWebHook(`${url}/bot${TOKEN}`); // comment when running local node
+bot.setWebHook(`${url}/bot${TOKEN}`); // comment when running local node
 
 var utils = require('./lib/utils.js')
 
@@ -207,7 +207,7 @@ function registerPartner(msg, type){
         const replyListenerId = bot.onReplyToMessage(payload.chat.id, payload.message_id, name => {
             bot.removeReplyListener(replyListenerId)
             utils.registerPartner(payload.chat.id, type, name.text)
-            bot.sendMessage(msg.chat.id, name.text + " has been locked by " + payload.chat.first_name);
+            bot.sendMessage(msg.from.id, name.text + " has been locked by " + payload.chat.first_name);
         })
     })
 }
