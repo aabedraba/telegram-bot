@@ -165,7 +165,7 @@ bot.onText(/\/malloc()/, (msg) => {
                 }
             })
         }
-        else if (!pointerIsFree){
+        else if (!pointerIsFree) {
             bot.sendMessage(msg.chat.id, "Eeeeeepa, you already got someone.");
         }
     })
@@ -202,7 +202,7 @@ bot.on('callback_query', (callback) => {
 
 })
 
-function registerPartner(msg, type){
+function registerPartner(msg, type) {
     bot.sendMessage(msg.chat.id, "Please **mention reply** with the name of the partner").then(payload => {
         const replyListenerId = bot.onReplyToMessage(payload.chat.id, payload.message_id, msg => {
             const name = msg.text;
@@ -221,6 +221,16 @@ bot.onText(/\/list_partners/, (msg) => {
         message += result;
         bot.sendMessage(msg.chat.id, message);
     })
+})
+
+bot.onText(/\/free/, (msg) => {
+    utils.freePartner(msg.from.id).then(freed => {
+        if (freed)
+            bot.sendMessage(msg.chat.id, msg.from.first_name + " has been freed. Run. RUN!");
+        else
+            bot.sendMessage(msg.chat.id, "Whatchu running from, bitch? You ain't got no partner.");
+    })
+
 })
 
 bot.on('polling_error', (error) => {
