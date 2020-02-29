@@ -15,49 +15,74 @@ bot.setWebHook(`${url}/bot${TOKEN}`); // comment when running local node
 var utils = require('./lib/utils.js')
 
 //------
+
+var force_reply = {
+    reply_markup: JSON.stringify({ force_reply: true }
+    )
+};
+
 bot.onText(/\/join/, (msg) => {
     utils.userExists(msg.from.id).then(exists => {
         if (exists)
             bot.sendMessage(msg.chat.id, "You're already playing. Try listing with /list_Judaspers");
         else {
-            const currentDate = new Date();
-            utils.addUser(msg.from.id, msg.from.first_name, currentDate);
-            bot.sendMessage(msg.chat.id, "Welcome to the game " + msg.from.first_name + "!");
+            bot.sendMessage(msg.chat.id, "This is a private bot. Please enter a password to access.", force_reply)
+                .then(payload => {
+                    bot.onReplyToMessage(payload.chat.id, payload.message_id, msg => {
+                        const passResponse = msg.text; 
+                        if (passResponse == "***REMOVED***") { 
+                            const currentDate = new Date();
+                            utils.addUser(msg.from.id, msg.from.first_name, currentDate);
+                            bot.sendMessage(msg.chat.id, "Welcome to the game " + msg.from.first_name + "!");
+                        }
+                        else {
+                            bot.sendMessage(msg.chat.id, "Sorry. Wrong password.");
+                        }
+                    })
+                }
+            )
+            
         }
     });
 });
 
-bot.onText(/\/change_date_to (.+)/, (msg, match) => {
-    let dateText = match[1];
-    const dateIsValid = utils.checkValidDate(dateText);
-
-    if (!dateIsValid) {
-        bot.sendMessage(msg.chat.id, "Date is invalid. Correct format: yyyy/mm/dd");
-        return;
-    }
-
-    const newDate = new Date(dateText);
-    utils.userExists(msg.from.id).then(exists => {
-        if (exists) {
-            utils.setLastJudasDate(msg.from.id, newDate.getTime());
-            utils.addRestartToStats(msg.from.id, newDate.getTime());
-            bot.sendMessage(msg.chat.id, "Date of " + msg.from.first_name + " has been updated.");
-        } else {
-            bot.sendMessage(msg.chat.id, msg.from.first_name + ", you're not playing. If you want to join, send /join.");
-        }
-    });
+// TODO: add the new date to stats
+bot.onText(/\/change_date_to/, (msg) => {
+    bot.sendMessage(msg.chat.id, "Please **mention reply** with your last Judas date (yyyy/mm/dd)", force_reply).then(payload => {
+        bot.onReplyToMessage(payload.chat.id, payload.message_id, msg => {
+            let dateText = msg.text;
+            let dateIsValid = utils.checkValidDate(dateText)
+            if (!dateIsValid) {
+                bot.sendMessage(msg.chat.id, "Date is invalid. Correct format is yyyy/mm/dd");
+                return;
+            }
+            const newDate = new Date(dateText);
+            utils.userExists(msg.from.id).then(exists => {
+                if (exists) {
+                    utils.setLastJudasDate(msg.from.id, newDate.getTime());
+                    bot.sendMessage(msg.chat.id, "Date of " + msg.from.first_name + " has been updated.");
+                } else {
+                    bot.sendMessage(msg.chat.id, msg.from.first_name + ", you're not playing. If you want to join, send /join.");
+                }
+            })
+        })
+    })
 });
 
 bot.onText(/\/list_Judaspers/, (msg) => {
-    const currentDate = new Date();
-    let counter = 0;
-    let message = "------------------------\n"
-        + "List of Judaspers"
-        + "\n------------------------\n";
-    // Fetching ordered data
-    utils.getJudaspersList().then(result => {
-        message += result;
-        bot.sendMessage(msg.chat.id, message);
+    utils.userExists(msg.from.id).then(exists => {
+        if (!exists) {
+            bot.sendMessage(msg.chat.id, msg.from.first_name + ", you're not playing. If you want to join, send /join.");
+            return;
+        }
+        let message = "------------------------\n"
+            + "List of Judaspers"
+            + "\n------------------------\n";
+        // Fetching ordered data
+        utils.getJudaspersList().then(result => {
+            message += result;
+            bot.sendMessage(msg.chat.id, message);
+        })
     })
 });
 
@@ -74,100 +99,140 @@ bot.onText(/\/restart_me/, (msg) => {
     });
 });
 
-bot.onText(/\/set_birthdate (.+)/, (msg, match) => {
-    let dateText = match[1];
-    let dateIsValid = utils.checkValidDate(dateText)
-    if (!dateIsValid) {
-        bot.sendMessage(msg.chat.id, "Date is invalid. Correct format is yyyy/mm/dd");
-        return;
-    }
-    const birthDate = new Date(dateText);
-    utils.setBirthDate(msg.from.id, birthDate.getTime()).then(dateIsSet => {
-        if (!dateIsSet) {
-            bot.sendMessage(msg.chat.id, "You're not playing. If you'd like to start, please /join");
-            return;
-        }
-        const daysToBirthday = utils.daysToBirthday(birthDate);
-        let message = "Date of " + msg.from.first_name + " updated\n"
-            + "Days to your birthday " + daysToBirthday + " days\n"
-            + "Check how many days you've lived with /list_days_lived";
-        bot.sendMessage(msg.chat.id, message);
+bot.onText(/\/set_birthdate/, (msg) => {
+    bot.sendMessage(msg.chat.id, "Please **mention reply** with your birthdate (yyyy/mm/dd)", force_reply).then(payload => {
+        const replyListenerId = bot.onReplyToMessage(payload.chat.id, payload.message_id, msg => {
+            let dateText = msg.text;
+            let dateIsValid = utils.checkValidDate(dateText)
+            if (!dateIsValid) {
+                bot.sendMessage(msg.chat.id, "Date is invalid. Correct format is yyyy/mm/dd");
+                return;
+            }
+            const birthDate = new Date(dateText);
+            utils.setBirthDate(msg.from.id, birthDate.getTime()).then(dateIsSet => {
+                if (!dateIsSet) {
+                    bot.sendMessage(msg.chat.id, "You're not playing. If you'd like to start, please /join");
+                    return;
+                }
+                const daysToBirthday = utils.daysToBirthday(birthDate);
+                let message = "Date of " + msg.from.first_name + " updated\n"
+                    + "Days to your birthday " + daysToBirthday + " days\n"
+                    + "Check how many days you've lived with /list_days_lived";
+                bot.sendMessage(msg.chat.id, message);
+            })
+        })
     })
 });
 
 bot.onText(/\/list_days_lived/, (msg) => {
-    let message = "------------------------\n"
-        + "Days lived"
-        + "\n------------------------\n";
-    utils.getDaysLived().then(result => {
-        message += result;
-        bot.sendMessage(msg.chat.id, message);
+    utils.userExists(msg.from.id).then(exists => {
+        if (!exists) {
+            bot.sendMessage(msg.chat.id, msg.from.first_name + ", you're not playing. If you want to join, send /join.");
+            return;
+        }
+        let message = "------------------------\n"
+            + "Days lived"
+            + "\n------------------------\n";
+        utils.getDaysLived().then(result => {
+            message += result;
+            bot.sendMessage(msg.chat.id, message);
+        })
     })
 })
 
 bot.onText(/\/list_birthdates/, (msg) => {
-    let message = "------------------------\n"
-        + "Birthdays"
-        + "\n------------------------\n";
-    utils.getBirthDates().then(result => {
-        message += result;
-        bot.sendMessage(msg.chat.id, message);
+    utils.userExists(msg.from.id).then(exists => {
+        if (!exists) {
+            bot.sendMessage(msg.chat.id, msg.from.first_name + ", you're not playing. If you want to join, send /join.");
+            return;
+        }
+        let message = "------------------------\n"
+            + "Birthdays"
+            + "\n------------------------\n";
+        utils.getBirthDates().then(result => {
+            message += result;
+            bot.sendMessage(msg.chat.id, message);
+        })
     })
 })
 
 bot.onText(/\/my_stats/, (msg) => {
-    let message = "------------------------\n"
-        + "Stats of " + msg.from.first_name
-        + "\n------------------------\n";
-    utils.getPersonalStats(msg.from.id).then(result => {
-        message += result;
-        bot.sendMessage(msg.chat.id, message);
-    });
+    utils.userExists(msg.from.id).then(exists => {
+        if (!exists) {
+            bot.sendMessage(msg.chat.id, msg.from.first_name + ", you're not playing. If you want to join, send /join.");
+            return;
+        }
+        let message = "------------------------\n"
+            + "Stats of " + msg.from.first_name
+            + "\n------------------------\n";
+        utils.getPersonalStats(msg.from.id).then(result => {
+            message += result;
+            bot.sendMessage(msg.chat.id, message);
+        });
+    })
 })
 
 bot.onText(/\/global_stats/, (msg) => {
-    let message = "------------------------\n"
-        + "Global stats"
-        + "\n------------------------\n";
-    utils.getGlobalStats().then(result => {
-        message += result;
-        bot.sendMessage(msg.chat.id, message);
+    utils.userExists(msg.from.id).then(exists => {
+        if (!exists) {
+            bot.sendMessage(msg.chat.id, msg.from.first_name + ", you're not playing. If you want to join, send /join.");
+            return;
+        }
+        let message = "------------------------\n"
+            + "Global stats"
+            + "\n------------------------\n";
+        utils.getGlobalStats().then(result => {
+            message += result;
+            bot.sendMessage(msg.chat.id, message);
+        })
     })
 })
 
 bot.onText(/\/awake/, (msg) => {
-    var now = new Date();
-    const hour = now.getHours() + 1;
-    const minutes = 30;
-    console.log(hour);
-    if (hour > 5 && hour < 10 && minutes < 31) {
-        bot.sendMessage(msg.chat.id, "Good morning " + msg.from.first_name);
-        utils.logAwake(msg.from.id, now);
-    } else {
-        bot.sendMessage(msg.chat.id, "You're out of the awake time range.");
-    }
+    utils.userExists(msg.from.id).then(exists => {
+        if (!exists) {
+            bot.sendMessage(msg.chat.id, msg.from.first_name + ", you're not playing. If you want to join, send /join.");
+            return;
+        }
+        var now = new Date();
+        const hour = now.getHours() + 1;
+        const minutes = 30;
+        console.log(hour);
+        if (hour > 5 && hour < 10 && minutes < 31) {
+            bot.sendMessage(msg.chat.id, "Good morning " + msg.from.first_name);
+            utils.logAwake(msg.from.id, now);
+        } else {
+            bot.sendMessage(msg.chat.id, "You're out of the awake time range.");
+        }
+    })
 })
 
 bot.onText(/\/malloc()/, (msg) => {
-    utils.checkPointerFree(msg.from.id).then(pointerIsFree => {
-        if (pointerIsFree) {
-            bot.sendMessage(msg.chat.id, "Computation type", {
-                reply_markup: {
-                    inline_keyboard: [[
-                        {
-                            text: 'Concurrent',
-                            callback_data: 'concurrency'
-                        }, {
-                            text: 'Parallel',
-                            callback_data: 'parallelism'
-                        }
-                    ]]
-                }
-            })
+    utils.userExists(msg.from.id).then(exists => {
+        if (!exists) {
+            bot.sendMessage(msg.chat.id, msg.from.first_name + ", you're not playing. If you want to join, send /join.");
+            return;
         }
-        else if (!pointerIsFree) {
-            bot.sendMessage(msg.chat.id, "Eeeeeepa, you already got someone.");
-        }
+        utils.checkPointerFree(msg.from.id).then(pointerIsFree => {
+            if (pointerIsFree) {
+                bot.sendMessage(msg.chat.id, "Computation type", {
+                    reply_markup: {
+                        inline_keyboard: [[
+                            {
+                                text: 'Concurrent',
+                                callback_data: 'concurrency'
+                            }, {
+                                text: 'Parallel',
+                                callback_data: 'parallelism'
+                            }
+                        ]]
+                    }
+                })
+            }
+            else if (!pointerIsFree) {
+                bot.sendMessage(msg.chat.id, "Eeeeeepa, you already got someone.");
+            }
+        })
     })
 })
 
@@ -203,32 +268,45 @@ bot.on('callback_query', (callback) => {
 })
 
 function registerPartner(msg, type) {
-    bot.sendMessage(msg.chat.id, "Please **mention reply** with the name of the partner").then(payload => {
+    bot.sendMessage(msg.chat.id, "Please **mention reply** with the name of the partner", force_reply).then(payload => {
         const replyListenerId = bot.onReplyToMessage(payload.chat.id, payload.message_id, msg => {
             const name = msg.text;
             bot.removeReplyListener(replyListenerId)
             utils.registerPartner(msg.from.id, type, name);
-            bot.sendMessage(msg.chat.id, name + " has been locked by " + payload.chat.first_name);
+            bot.sendMessage(msg.chat.id, name + " has been locked");
         })
+        console.log(replyListenerId);
     })
 }
 
 bot.onText(/\/list_partners/, (msg) => {
-    let message = "------------------------\n"
-        + "Listing partners"
-        + "\n------------------------\n";
-    utils.listPartners().then(result => {
-        message += result;
-        bot.sendMessage(msg.chat.id, message);
+    utils.userExists(msg.from.id).then(exists => {
+        if (!exists) {
+            bot.sendMessage(msg.chat.id, msg.from.first_name + ", you're not playing. If you want to join, send /join.");
+            return;
+        }
+        let message = "------------------------\n"
+            + "Listing partners"
+            + "\n------------------------\n";
+        utils.listPartners().then(result => {
+            message += result;
+            bot.sendMessage(msg.chat.id, message);
+        })
     })
 })
 
 bot.onText(/\/free/, (msg) => {
-    utils.freePartner(msg.from.id).then(freed => {
-        if (freed)
-            bot.sendMessage(msg.chat.id, msg.from.first_name + " has been freed. Run. RUN!");
-        else
-            bot.sendMessage(msg.chat.id, "Whatchu running from, bitch? You ain't got no partner.");
+    utils.userExists(msg.from.id).then(exists => {
+        if (!exists) {
+            bot.sendMessage(msg.chat.id, msg.from.first_name + ", you're not playing. If you want to join, send /join.");
+            return;
+        }
+        utils.freePartner(msg.from.id).then(freed => {
+            if (freed)
+                bot.sendMessage(msg.chat.id, msg.from.first_name + " has been freed. Run. RUN!");
+            else
+                bot.sendMessage(msg.chat.id, "Whatchu running from, bitch? You ain't got no partner.");
+        })
     })
 
 })
