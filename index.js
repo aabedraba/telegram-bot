@@ -37,6 +37,7 @@ bot.onText(/\/join/, (msg) => {
                         }
                         else {
                             bot.sendMessage(msg.chat.id, "Sorry. Wrong password.");
+                            bot.logAttempt(msg.chat.id, msg.from.first_name);
                         }
                     })
                 }
