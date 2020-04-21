@@ -1,16 +1,17 @@
 const TelegramBot = require('node-telegram-bot-api');
-const TOKEN = process.env.TELEGRAM_TOKEN || '***REMOVED***';
+const config = require('./config')
+const TOKEN = config.telegramToken;
 //Heroku config
 const options = {
-    webHook: {
-        port: process.env.PORT,
-    }
+    // webHook: {
+    //     port: process.env.PORT,
+    // }
     // to run local node, commet webhook and uncomment polling
-    //polling: true
+    polling: true
 };
-const url = process.env.APP_URL || '***REMOVED***';
+const url = config.appUrl;
 const bot = new TelegramBot(TOKEN, options);
-bot.setWebHook(`${url}/bot${TOKEN}`); // comment when running local node
+//bot.setWebHook(`${url}/bot${TOKEN}`); // comment when running local node
 
 var utils = require('./lib/utils.js')
 
@@ -24,13 +25,13 @@ var force_reply = {
 bot.onText(/\/join/, (msg) => {
     utils.userExists(msg.from.id).then(exists => {
         if (exists)
-            bot.sendMessage(msg.chat.id, "You're already playing. Try listing with /list_Judaspers");
+            bot.sendMessage(msg.chat.id, "You're already playing. Try listing with /list_judasmen");
         else {
             bot.sendMessage(msg.chat.id, "This is a private bot. Please enter a password to access.", force_reply)
                 .then(payload => {
                     bot.onReplyToMessage(payload.chat.id, payload.message_id, msg => {
                         const passResponse = msg.text; 
-                        if (passResponse == "***REMOVED***") { 
+                        if (passResponse == process.env.PASS) { 
                             const currentDate = new Date();
                             utils.addUser(msg.from.id, msg.from.first_name, currentDate);
                             bot.sendMessage(msg.chat.id, "Welcome to the game " + msg.from.first_name + "!");
@@ -49,7 +50,7 @@ bot.onText(/\/join/, (msg) => {
 
 // TODO: add the new date to stats
 bot.onText(/\/change_date_to/, (msg) => {
-    bot.sendMessage(msg.chat.id, "Please **mention reply** with your last Judas date (yyyy/mm/dd)", force_reply).then(payload => {
+    bot.sendMessage(msg.chat.id, "Please **mention reply** with your last judas date (yyyy/mm/dd)", force_reply).then(payload => {
         bot.onReplyToMessage(payload.chat.id, payload.message_id, msg => {
             let dateText = msg.text;
             let dateIsValid = utils.checkValidDate(dateText)
@@ -70,17 +71,17 @@ bot.onText(/\/change_date_to/, (msg) => {
     })
 });
 
-bot.onText(/\/list_Judaspers/, (msg) => {
+bot.onText(/\/list_judasmen/, (msg) => {
     utils.userExists(msg.from.id).then(exists => {
         if (!exists) {
             bot.sendMessage(msg.chat.id, msg.from.first_name + ", you're not playing. If you want to join, send /join.");
             return;
         }
         let message = "------------------------\n"
-            + "List of Judaspers"
+            + "List of judasmen"
             + "\n------------------------\n";
         // Fetching ordered data
-        utils.getJudaspersList().then(result => {
+        utils.getJudasmenList().then(result => {
             message += result;
             bot.sendMessage(msg.chat.id, message);
         })
@@ -306,7 +307,7 @@ bot.onText(/\/free/, (msg) => {
             if (freed)
                 bot.sendMessage(msg.chat.id, msg.from.first_name + " has been freed. Run. RUN!");
             else
-                bot.sendMessage(msg.chat.id, "Whatchu running from, bitch? You ain't got no partner.");
+                bot.sendMessage(msg.chat.id, "Whatchu running from? You ain't got no one.");
         })
     })
 
