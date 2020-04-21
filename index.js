@@ -3,15 +3,15 @@ const config = require('./config')
 const TOKEN = config.telegramToken;
 //Heroku config
 const options = {
-    // webHook: {
-    //     port: process.env.PORT,
-    // }
+    webHook: {
+        port: process.env.PORT,
+    }
     // to run local node, commet webhook and uncomment polling
-    polling: true
+    //polling: true
 };
 const url = config.appUrl;
 const bot = new TelegramBot(TOKEN, options);
-//bot.setWebHook(`${url}/bot${TOKEN}`); // comment when running local node
+bot.setWebHook(`${url}/bot${TOKEN}`); // comment when running local node
 
 var utils = require('./lib/utils.js')
 
