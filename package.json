@@ -1,26 +1,26 @@
 {
-  "name": "***REMOVED***",
-  "version": "1.0.0",
-  "description": "TODO: configure date to be saved in JSON to secure persistency when server is down.  TODO: upload to a server (probably Raspberry Pi?).",
-  "main": "index.js",
-  "dependencies": {
-    "dotenv": "^8.2.0",
-    "firebase": "^7.2.1",
-    "firebase-admin": "^8.7.0",
-    "node-telegram-bot-api": "^0.40.0"
-  },
-  "devDependencies": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/aabedraba/telegram-bot.git"
-  },
-  "bugs": {
-    "url": "https://github.com/aabedraba/telegram-bot/issues"
-  },
-  "homepage": "https://github.com/aabedraba/telegram-bot#readme"
+    "name": "wingmennojudas",
+    "version": "1.0.0",
+    "description": "TODO: configure date to be saved in JSON to secure persistency when server is down.  TODO: upload to a server (probably Raspberry Pi?).",
+    "main": "index.js",
+    "dependencies": {
+        "dotenv": "^8.2.0",
+        "firebase": "^7.2.1",
+        "firebase-admin": "^8.7.0",
+        "node-telegram-bot-api": "^0.40.0"
+    },
+    "devDependencies": {},
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/aabedraba/telegram-bot.git"
+    },
+    "bugs": {
+        "url": "https://github.com/aabedraba/telegram-bot/issues"
+    },
+    "homepage": "https://github.com/aabedraba/telegram-bot#readme"
 }
