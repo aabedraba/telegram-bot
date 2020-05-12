@@ -123,7 +123,9 @@ bot.onText(/\/set_birthdate/, (msg) => {
                 bot.sendMessage(msg.chat.id, message);
             })
         })
+        bot.removeReplyListener(replyListenerId)
     })
+
 });
 
 bot.onText(/\/list_days_lived/, (msg) => {
@@ -273,11 +275,10 @@ function registerPartner(msg, type) {
     bot.sendMessage(msg.chat.id, "Please **mention reply** with the name of the partner", force_reply).then(payload => {
         const replyListenerId = bot.onReplyToMessage(payload.chat.id, payload.message_id, msg => {
             const name = msg.text;
-            bot.removeReplyListener(replyListenerId)
             utils.registerPartner(msg.from.id, type, name);
             bot.sendMessage(msg.chat.id, name + " has been locked");
         })
-        console.log(replyListenerId);
+        bot.removeReplyListener(replyListenerId)
     })
 }
 
